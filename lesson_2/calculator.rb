@@ -3,13 +3,12 @@
 # perform the operation on the two numbers
 # show the result
 
-
 Kernel.puts("Welcome to Calculator!")
 
 Kernel.puts("What's the first number?")
 number1 = Kernel.gets().chomp()
 
-number2 = Kernel.puts("What's the second number?")
+Kernel.puts("What's the second number?")
 number2 = Kernel.gets().chomp()
 
 Kernel.puts("What operation would you like to perform? 1) add 2)subtract 3)multiply 4) divide")
