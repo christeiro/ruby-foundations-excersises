@@ -42,17 +42,12 @@ end
 def player_places_piece!(brd)
   square = ''
   loop do
-    prompt "Choose a square (#{empty_squares(brd).join(', ')}):"
+    prompt "Choose a position to place a piece: #{joinor(empty_squares(brd), ', ')}"
     square = gets.chomp.to_i
     break if empty_squares(brd).include?(square)
     prompt "Sorry it's not a valid choice"
   end
   brd[square] = PLAYER_MARKER
-end
-
-def computer_places_piece!(brd)
-  square = empty_squares(brd).sample
-  brd[square] = COMPUTER_MARKER
 end
 
 def board_full?(brd)
@@ -74,14 +69,64 @@ def detect_winner(brd)
   nil
 end
 
+def joinor(arr, delimiter=', ', word='or')
+  arr[-1] = "#{word} #{arr.last}" if arr.size > 1
+  arr.size == 2 ? arr.join(' ') : arr.join(delimiter)
+end
+
+def find_at_risk_square(line, board, marker)
+  if board.values_at(*line).count(marker) == 2
+    board.select { |k, v| line.include?(k) && v == INITIAL_MARKER }.keys.first
+  else
+    nil
+  end
+end
+
+def computer_places_piece!(brd)
+  square = nil
+
+  # defense first
+  WINNING_LINES.each do |line|
+    square = find_at_risk_square(line, brd, PLAYER_MARKER)
+    break if square
+  end
+
+  # offense
+  if !square
+    WINNING_LINES.each do |line|
+      square = find_at_risk_square(line, brd, COMPUTER_MARKER)
+      break if square
+    end
+  end
+
+  # just pick a square
+  if !square
+    square = empty_squares(brd).sample
+  end
+
+  brd[square] = COMPUTER_MARKER
+end
+
+def alternate_player(current_player)
+  current_player == PLAYER_MARKER ? COMPUTER_MARKER : PLAYER_MARKER
+end
+
+def place_piece!(brd, current_player)
+  if current_player == PLAYER_MARKER
+    player_places_piece!(brd)
+  else
+    computer_places_piece!(brd)
+  end
+end
+
 loop do
   board = initialize_board
+  current_player = PLAYER_MARKER
 
   loop do
     display_board(board)
-    player_places_piece!(board)
-    break if someone_won?(board) || board_full?(board)
-    computer_places_piece!(board)
+    place_piece!(board, current_player)
+    current_player = alternate_player(current_player)
     break if someone_won?(board) || board_full?(board)
   end
 
