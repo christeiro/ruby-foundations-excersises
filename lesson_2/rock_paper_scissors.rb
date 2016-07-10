@@ -16,16 +16,11 @@ def prompt(msg)
 end
 
 def win?(first, second)
-  (first == 'scissors' && second == 'paper') ||
-    (first == 'paper' && second == 'rock') ||
-    (first == 'rock' && second == 'lizard') ||
-    (first == 'lizard' && second == 'spock') ||
-    (first == 'spock' && second == 'scissors') ||
-    (first == 'scissors' && second == 'lizard') ||
-    (first == 'lizard' && second == 'paper') ||
-    (first == 'paper' && second == 'spock') ||
-    (first == 'spock' && second == 'rock') ||
-    (first == 'rock' && second == 'scissors')
+  first == 'rock' && %w(lizard scissors).include?(second)    ||
+    first == 'scissors' && %w(lizard paper).include?(second) ||
+    first == 'paper' && %w(spock rock).include?(second)      ||
+    first == 'spock' && %w(rock scissors).include?(second)   ||
+    first == 'lizard' && %w(spock paper).include?(second)
 end
 
 def display_results(player, computer)
@@ -52,23 +47,21 @@ loop do
 
     choice = Kernel.gets().chomp()
 
-    if VALID_CHOICES.key?(choice)
-      break
-    else
-      prompt("That's not a valid choice")
-    end
+    break if VALID_CHOICES.key?(choice)
+    prompt("That's not a valid choice")
   end
 
-  computer_choice = VALID_CHOICES.keys.sample
+  player_choice = VALID_CHOICES[choice]
+  computer_choice = VALID_CHOICES.values.sample
 
-  prompt("You chose: #{VALID_CHOICES[choice]}")
-  prompt("Computer chose: #{VALID_CHOICES[computer_choice]}")
+  prompt("You chose: #{player_choice}")
+  prompt("Computer chose: #{computer_choice}")
 
-  display_results(VALID_CHOICES[choice], VALID_CHOICES[computer_choice])
+  display_results(player_choice, computer_choice)
 
-  if win?(VALID_CHOICES[choice], VALID_CHOICES[computer_choice])
+  if win?(player_choice, computer_choice)
     player_winnings_count += 1
-  elsif win?(VALID_CHOICES[computer_choice], VALID_CHOICES[choice])
+  elsif win?(computer_choice, player_choice)
     computer_winnings_count += 1
   end
 
