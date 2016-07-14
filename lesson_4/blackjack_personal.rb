@@ -2,10 +2,11 @@ require 'pry'
 
 SUITS = ['H', 'D', 'S', 'C']
 CARDS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
-CARD_VALUES = {'2' => 2, '3' => 3, '4' => 4, '5' => 5, '6' => 6, '7' => 7, '8' => 8, '9' => 9, '10' => 10, 'J' => 10, 'Q' => 10, 'K' => 10, 'A' =>11}
+CARD_VALUES = { '2' => 2, '3' => 3, '4' => 4, '5' => 5,
+                '6' => 6, '7' => 7, '8' => 8, '9' => 9,
+                '10' => 10, 'J' => 10, 'Q' => 10, 'K' => 10, 'A' => 11 }
 BLACKJACK = 21
 DEALER_MIN = 17
-
 
 def prompt(msg)
   puts "=> #{msg}"
@@ -41,89 +42,138 @@ def busted?(score)
 end
 
 def show_hand(person)
-  prompt "#{person[:name]} has: #{person[:cards]}"
+  prompt "#{person[:name]} has: #{person[:cards]}. SCORE: #{person[:score]}"
 end
 
-def show_score(person)
-  prompt "#{person[:name]}'s score is: #{person[:score]}"
+def play_again?
+  prompt "Play again? (Y)es/(N)o"
+  play_again = gets.chomp
+  %w(y yes).include?(play_again)
 end
 
-prompt "Welcome to Black Jack"
-
-deck = initialize_deck
-
-player_cards = []
-dealer_cards = []
-
-player = {
-  cards: [],
-  score: 0,
-  name: 'Player',
-}
-
-dealer = {
-  cards: [],
-  score: 0,
-  name: 'Dealer'
-}
-
-2.times do
-  player[:cards] << deck.shift
-  dealer[:cards] << deck.shift
+def detect_result(player, dealer)
+  if player[:score] > BLACKJACK
+    :player_busted
+  elsif dealer[:score] > BLACKJACK
+    :dealer_busted
+  elsif player[:score] > dealer[:score]
+    :player
+  elsif dealer[:score] > player[:score]
+    :dealer
+  else
+    :tie
+  end
 end
 
-player[:score] = total(player[:cards])
-dealer[:score] = total(dealer[:cards])
+def display_result(player, dealer)
+  result = detect_result(player, dealer)
+  case result
+  when :player_busted
+    prompt "You busted! Dealer wins!"
+  when :dealer_busted
+    prompt "Dealer busted! You win!"
+  when :player
+    prompt "You win!"
+  when :dealer
+    prompt "Dealer wins"
+  when :tie
+    prompt "It's a tie"
+  end
+end
 
-prompt "Dealer has: #{dealer[:cards][1]} and ?"
-prompt "Your cards are now #{player[:cards][0]} and #{player[:cards][1]}, for a total of #{player[:score]}"
+def display_overall_score(player, dealer)
+  prompt "Overall score! You have: #{player} wins || Dealer has: #{dealer} wins"
+end
+
+player_wins_count = 0
+dealer_wins_count = 0
 
 loop do
-  player_turn = nil
-  loop do
-    prompt "Would you like to (h)it or (s)tay?"
-    player_turn = gets.chomp
-    break if %w(h hit s stay).include?(player_turn)
-    prompt "Sorry, must enter 'h' or 's'"
-  end
+  prompt "Welcome to Twnety-One!"
+  puts "========================="
+  puts "========================="
+  puts "========================="
 
-  if %w(h hit).include?(player_turn)
-    prompt "You choose to hit!"
-    prompt "Dealing another card for the player"
+  deck = initialize_deck
+
+  player = {
+    cards: [],
+    score: 0,
+    name: 'Player'
+  }
+
+  dealer = {
+    cards: [],
+    score: 0,
+    name: 'Dealer'
+  }
+
+  2.times do
     player[:cards] << deck.shift
-    show_hand(player)
-    player[:score] = total(player[:cards])
-    show_score(player)
+    dealer[:cards] << deck.shift
   end
 
-  break if %w(s stay).include?(player_turn) || busted?(player[:score])
-end
-
-puts "========================="
-show_hand(dealer)
-show_score(dealer)
-
-
-until dealer[:score] >= DEALER_MIN
-  prompt "Dealing another card to the dealer"
-  dealer[:cards] << deck.shift
-  show_hand(dealer)
+  player[:score] = total(player[:cards])
   dealer[:score] = total(dealer[:cards])
-  show_score(dealer)
-end
 
-puts "========================="
-puts "#{player[:name]} has: #{player[:cards]}, for a total of: #{player[:score]}"
-puts "#{dealer[:name]} has: #{dealer[:cards]}, for a total of: #{dealer[:score]}"
-puts "========================="
+  prompt "Dealer has: #{dealer[:cards][1]} and ?"
+  show_hand(player)
+
+  loop do
+    player_turn = nil
+    loop do
+      prompt "Would you like to (h)it or (s)tay?"
+      player_turn = gets.chomp
+      break if %w(h hit s stay).include?(player_turn.downcase)
+      prompt "Sorry, must enter 'h' or 's'"
+    end
+
+    if %w(h hit).include?(player_turn)
+      prompt "You choose to hit!"
+      prompt "Dealing another card for the player"
+      player[:cards] << deck.shift
+      player[:score] = total(player[:cards])
+      show_hand(player)
+    end
+
+    break if %w(s stay).include?(player_turn) || busted?(player[:score])
+  end
+
+  puts "========================="
+  show_hand(dealer)
+
+  if busted?(player[:score])
+    prompt "Dealer stays!"
+  else
+    until dealer[:score] >= DEALER_MIN
+      prompt "Dealing another card to the dealer"
+      dealer[:cards] << deck.shift
+      dealer[:score] = total(dealer[:cards])
+      show_hand(dealer)
+    end
+  end
 
 
-if player[:score] > BLACKJACK && dealer[:score] > BLACKJACK
-  prompt "You and dealer busted! It's a tie!"
-elsif (player[:score] > dealer[:score] || dealer[:score] > BLACKJACK) && player[:score] <= BLACKJACK
-  prompt "You win!"
-elsif (dealer[:score] > player[:score] || player[:score] > BLACKJACK) && dealer[:score] <= BLACKJACK
-  prompt "Dealer wins!"
-else
-  prompt "It's a tie!"
+  puts "========================="
+  puts "Comparing hands:"
+  show_hand(player)
+  show_hand(dealer)
+  puts "========================="
+  puts "========================="
+
+  display_result(player, dealer)
+
+  overall_score = detect_result(player, dealer)
+  case overall_score
+  when :player
+    player_wins_count += 1
+  when :dealer
+    dealer_wins_count += 1
+  end
+
+  display_overall_score(player_wins_count, dealer_wins_count)
+  if player_wins_count >= 5 || dealer_wins_count >= 5
+    play_again? ? next : break
+    promot "Thanks for playing. Bye!"
+  end
 end
