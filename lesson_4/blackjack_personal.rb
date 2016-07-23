@@ -1,10 +1,11 @@
 require 'pry'
 
-SUITS = ['H', 'D', 'S', 'C']
-CARDS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
+SUITS = ['H', 'D', 'S', 'C'].freeze
+CARDS = ['2', '3', '4', '5', '6', '7', '8',
+         '9', '10', 'J', 'Q', 'K', 'A'].freeze
 CARD_VALUES = { '2' => 2, '3' => 3, '4' => 4, '5' => 5,
                 '6' => 6, '7' => 7, '8' => 8, '9' => 9,
-                '10' => 10, 'J' => 10, 'Q' => 10, 'K' => 10, 'A' => 11 }
+                '10' => 10, 'J' => 10, 'Q' => 10, 'K' => 10, 'A' => 11 }.freeze
 BLACKJACK = 21
 DEALER_MIN = 17
 
@@ -88,9 +89,14 @@ end
 player_wins_count = 0
 dealer_wins_count = 0
 
+prompt "Welcome to Twnety-One!"
+puts "========================="
+
+new_game = true
+
 loop do
-  prompt "Welcome to Twnety-One!"
-  puts "========================="
+
+  new_game = false
   puts "========================="
   puts "========================="
 
@@ -153,7 +159,6 @@ loop do
     end
   end
 
-
   puts "========================="
   puts "Comparing hands:"
   show_hand(player)
@@ -164,16 +169,20 @@ loop do
   display_result(player, dealer)
 
   overall_score = detect_result(player, dealer)
-  case overall_score
-  when :player
+  if %i(player dealer_busted).include?(overall_score)
     player_wins_count += 1
-  when :dealer
+  elsif %i(dealer player_busted).include?(overall_score)
     dealer_wins_count += 1
   end
 
   display_overall_score(player_wins_count, dealer_wins_count)
   if player_wins_count >= 5 || dealer_wins_count >= 5
-    play_again? ? next : break
-    promot "Thanks for playing. Bye!"
+    if play_again?
+      player_wins_count = 0
+      dealer_wins_count = 0
+    else
+      prompt "Thanks for playing. Bye!"
+      break
+    end
   end
 end
